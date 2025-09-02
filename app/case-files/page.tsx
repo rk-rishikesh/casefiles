@@ -41,7 +41,7 @@ export default function CaseFilesIndexPage() {
     const { data: walletClient } = useWalletClient();
 
     const handleEncrypt = async (caseCID: string, guiltySuspectId?: string, crimestory?: string) => {
-
+        console.log(crimestory);
         if (!walletClient) {
             return;
         }
@@ -55,14 +55,11 @@ export default function CaseFilesIndexPage() {
 
             // Calculate target block height based on decryption time
             const currentBlock = await provider.getBlockNumber();
-            const currentBlockData = await provider.getBlock(currentBlock);
-            const currentTimestamp = currentBlockData?.timestamp || Math.floor(Date.now() / 1000);
-
+            
             const blockHeight = BigInt(30454366);
             console.log(`Current block: ${currentBlock}, Target block: ${blockHeight.toString()}`);
 
             // Set the message to encrypt
-            const payload = { guiltySuspectId, crimestory };// Future Scope
             const msgBytes = ethers.AbiCoder.defaultAbiCoder().encode(["string"], [JSON.stringify(guiltySuspectId)]);
             const encodedMessage = getBytes(msgBytes);
             console.log("Encoded message:", encodedMessage);
@@ -155,7 +152,7 @@ export default function CaseFilesIndexPage() {
                 </button>
                 <div className="relative z-20 max-w-7xl mx-auto px-4 py-12 md:py-20">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 pt-8">
-                        {cases.map((c, idx) => (
+                        {cases.map((c) => (
                             <div key={c.id}>
                                 <div className="w-[350px] group overflow-hidden rounded-xl bg-case-card-pattern bg-cover bg-center text-gray-50">
                                     <div className="before:duration-700 before:absolute before:w-28 before:h-28 before:bg-transparent before:blur-none before:border-8 before:opacity-50 before:rounded-full before:-left-4 before:-top-12 w-64 h-48  flex flex-col justify-between relative z-10 group-hover:before:top-28 group-hover:before:left-44 group-hover:before:scale-125 group-hover:before:blur">

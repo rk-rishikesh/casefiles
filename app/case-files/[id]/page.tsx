@@ -6,10 +6,6 @@ import { getCaseById } from "../cases";
 import type { CaseFile } from "../cases";
 import Wallet from "@/app/wallet";
 import { useAccount } from 'wagmi';
-// import { getLatestGeneratedCase } from "@/lib/generated-store";
-// import { CONTRACT_ABI, CONTRACT_ADDRESS } from '@/lib/contract';
-// import { ethers, getBytes } from "ethers";
-// import { Blocklock, encodeCiphertextToSolidity, encodeCondition } from "blocklock-js";
 
 export default function CaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = React.use(params as Promise<{ id: string }>);
@@ -65,7 +61,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
     const [messages, setMessages] = useState<Array<{ sender: "you" | "suspect"; text: string }>>([]);
     const [isSending, setIsSending] = useState<boolean>(false);
 
-    const TabNames = ["Case File", "Hints", "Suspects"];
+    const TabNames = ["Case File", "Hints", "Suspects", "My Verdict"];
 
     const selectedSuspect = useMemo(() => {
         if (!caseFile) return undefined;
@@ -172,69 +168,6 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
             setIsSending(false);
         }
     };
-    // const handleEncrypt = async () => {
-    //     if (submitted) {
-    //         return;
-    //     }
-
-    //     if (!walletClient) {
-    //         return;
-    //     }
-
-    //     try {
-    //         const provider = new ethers.BrowserProvider(walletClient.transport);
-    //         const jsonProvider = new ethers.JsonRpcProvider(`https://base-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_KEY}`);
-    //         const signer = await provider.getSigner();
-    //         console.log(signer);
-    //         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-
-    //         // Calculate target block height based on decryption time
-    //         const currentBlock = await provider.getBlockNumber();
-    //         // Decrypt in 7 Days
-    //         const blockHeight = BigInt("33168357");
-
-    //         // Set the message to encrypt
-    //         const msgBytes = ethers.AbiCoder.defaultAbiCoder().encode(["string"], [selectedSuspectId]);
-    //         const encodedMessage = getBytes(msgBytes);
-    //         console.log("Encoded message:", encodedMessage);
-
-    //         // Encrypt the encoded message usng Blocklock.js library
-    //         const blocklockjs = Blocklock.createBaseSepolia(jsonProvider);
-    //         const cipherMessage = blocklockjs.encrypt(encodedMessage, blockHeight);
-    //         console.log("Ciphertext:", cipherMessage);
-    //         // Set the callback gas limit and price
-    //         // Best practice is to estimate the callback gas limit e.g., by extracting gas reports from Solidity tests
-    //         const callbackGasLimit = 700_000;
-    //         // Based on the callbackGasLimit, we can estimate the request price by calling BlocklockSender
-    //         // Note: Add a buffer to the estimated request price to cover for fluctuating gas prices between blocks
-    //         console.log(BigInt(callbackGasLimit));
-    //         const [requestCallBackPrice] = await blocklockjs.calculateRequestPriceNative(BigInt(callbackGasLimit))
-    //         console.log("Request CallBack price:", ethers.formatEther(requestCallBackPrice), "ETH");
-    //         const conditionBytes = encodeCondition(blockHeight);
-
-    //         const tx = await contract.createTimelockRequestWithDirectFunding(
-    //             callbackGasLimit,
-    //             currentBlock,
-    //             blockHeight,
-    //             conditionBytes,
-    //             encodeCiphertextToSolidity(cipherMessage),
-    //             { value: requestCallBackPrice }
-    //         );
-
-    //         const receipt = await tx.wait(1);
-    //         if (receipt) {
-    //             setSubmitted(true);
-    //         }
-    //         if (!receipt) throw new Error("Transaction has not been mined");
-
-    //     } catch (error) {
-    //         console.error('Contract write failed:', error);
-    //         if (error instanceof Error) {
-    //             console.error('Error message:', error.message);
-    //             console.error('Error stack:', error.stack);
-    //         }
-    //     }
-    // };
 
     if (!isConnected) {
         return (
@@ -276,7 +209,7 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
                 {/* Left vertical tabs */}
                 <div className="text-2xl font-funnel-display text-white p-4">CRIME FILES</div>
                 <aside className="w-56 p-4 space-y-2">
-                    {[1, 2, 3].map((n) => (
+                    {[1, 2, 3, 4].map((n) => (
                         <button
                             key={n}
                             onClick={() => setActiveTab(n)}
@@ -411,27 +344,43 @@ export default function CaseDetailPage({ params }: { params: Promise<{ id: strin
                                         </div>
                                     )}
                                 </div>
-
-                                {/* <div className="px-6 md:px-20 fixed bottom-5 right-5">
-                                <button
-                                    onClick={() => handleEncrypt()}
-                                    disabled={!selectedSuspect || submitted}
-                                    className={`mt-6 w-full md:w-auto h-11 px-6 border border-[#2b2f6a] text-[#2b2f6a] hover:bg-[#2b2f6a]/10 transition-colors ${!selectedSuspectId || submitted ? "opacity-50 cursor-not-allowed" : ""}`}
-                                >
-                                    Submit verdict
-                                </button>
-                            </div> */}
-
-                                {/* {submitted && selectedSuspect && (
-                                <div className="mt-4 mx-6 md:mx-20 p-4 border border-[#2b2f6a] bg-white/40 text-[#1e2a42]">
-                                    You selected <span className="font-semibold text-[#2b2f6a]">{selectedSuspect.name}</span> as guilty, your verdict is encrypted via Blocklock.
-                                    <div className="text-sm text-[#2b2f6a] mt-1">The verdict will be revealed in 7 days.</div>
-                                </div>
-                            )} */}
                             </div>
                         </>
 
                     )}
+
+                    {activeTab === 4 && (
+                        <>
+                            <div className="relative z-20 max-w-7xl mx-auto px-4 py-12 md:py-20">
+                                <div className="grid grid-cols-2 gap-6 md:gap-8 pt-8">
+                                    {caseFile.suspects.map((c) => (
+                                        <div key={c.id}>
+                                            <div className="w-[350px] group overflow-hidden rounded-xl bg-case-card-pattern bg-cover bg-center text-gray-50">
+                                                <div className="before:duration-700 before:absolute before:w-28 before:h-28 before:bg-transparent before:blur-none before:border-8 before:opacity-50 before:rounded-full before:-left-4 before:-top-12 w-64 h-48  flex flex-col justify-between relative z-10 group-hover:before:top-28 group-hover:before:left-44 group-hover:before:scale-125 group-hover:before:blur">
+                                                    <div className="text p-3 flex flex-col justify-evenly h-full">
+                                                        <span className="font-bold text-2xl">{c.name}</span>
+                                                    </div>
+                                                    <div className="w-[350px] flex flex-row justify-between z-10">
+                                                        <div className="hover:opacity-90 py-3 bg-cyan-50 w-full flex justify-center">
+
+                                                        </div>
+                                                        <div className="hover:opacity-90 py-3 bg-cyan-50 w-full flex justify-end p-4">
+                                                            <Link href={`/case-files/${c.id}`} className="group block text-black ">
+                                                                _MARK CRIMINAL_
+                                                            </Link>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>
+
+                    )}
+
                 </section>
                 {isInterrogationOpen && (
                     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center p-4">

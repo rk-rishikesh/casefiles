@@ -23,8 +23,8 @@ const funnelSans = Funnel_Sans({
 
 // Websit Config
 export const metadata: Metadata = {
-  title: "Randamu",
-  description: "Made with love by Team FIL-B",
+  title: "Crime Files",
+  description: "Be the detective",
 };
 
 export default function RootLayout({
